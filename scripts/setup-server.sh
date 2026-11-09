@@ -67,3 +67,4 @@ echo " 2. cd /opt/tracksentinel && docker compose -f docker-compose.prod.yml up 
 echo " 3. docker exec -i tracksentinel_postgres psql -U tracksentinel -d tracksentinel < packages/db/migrations/0000_brave_smasher.sql"
 echo " 4. sudo cp docker/nginx-site.conf /etc/nginx/sites-available/tracksentinel"
 echo " 5. sudo certbot --nginx -d your-app-domain.com"
+

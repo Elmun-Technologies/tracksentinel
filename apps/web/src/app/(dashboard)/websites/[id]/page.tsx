@@ -6,6 +6,7 @@ import { eq, and, desc } from 'drizzle-orm'
 import { ArrowLeft, ExternalLink, CheckCircle, XCircle, AlertTriangle, HelpCircle, Activity, ShieldCheck, Zap, Settings } from 'lucide-react'
 import { CheckTriggerButton } from '@/components/websites/check-trigger-button'
 import { DeleteWebsiteButton } from '@/components/websites/delete-website-button'
+import { EventMatrix } from '@/components/websites/event-matrix'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -178,6 +179,12 @@ export default async function WebsiteDetailPage({ params }: PageProps) {
           </p>
         </div>
       </div>
+
+      {/* Meta Standard Event Matrix */}
+      <EventMatrix
+        expectedEvents={site.expectedEvents}
+        observedEvents={eventsObserved}
+      />
 
       {/* Duplicate Events Suspected Warning */}
       {duplicates.length > 0 && (
