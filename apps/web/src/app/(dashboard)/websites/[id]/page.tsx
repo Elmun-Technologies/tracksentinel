@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { db, websites, monitoringChecks, incidents } from '@tracksentinel/db'
 import { eq, and, desc } from 'drizzle-orm'
-import { ArrowLeft, ExternalLink, CheckCircle, XCircle, AlertTriangle, HelpCircle, Activity, ShieldCheck, Zap } from 'lucide-react'
+import { ArrowLeft, ExternalLink, CheckCircle, XCircle, AlertTriangle, HelpCircle, Activity, ShieldCheck, Zap, Settings } from 'lucide-react'
 import { CheckTriggerButton } from '@/components/websites/check-trigger-button'
+import { DeleteWebsiteButton } from '@/components/websites/delete-website-button'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -73,8 +74,16 @@ export default async function WebsiteDetailPage({ params }: PageProps) {
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <CheckTriggerButton websiteId={site.id} websiteName={site.name} />
+            <Link
+              href={`/websites/${site.id}/edit`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+            >
+              <Settings className="w-3.5 h-3.5 text-gray-500" />
+              Settings
+            </Link>
+            <DeleteWebsiteButton websiteId={site.id} websiteName={site.name} />
           </div>
         </div>
       </div>
