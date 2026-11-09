@@ -31,3 +31,4 @@ describe('Multi-Tenant Data Isolation Rules', () => {
     expect(hasAccess).toBe(true)
   })
 })
+

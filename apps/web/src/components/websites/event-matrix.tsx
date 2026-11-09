@@ -71,3 +71,4 @@ export function EventMatrix({ expectedEvents, observedEvents }: EventMatrixProps
     </div>
   )
 }
+

@@ -7,6 +7,7 @@ import { ArrowLeft, ExternalLink, CheckCircle, XCircle, AlertTriangle, HelpCircl
 import { CheckTriggerButton } from '@/components/websites/check-trigger-button'
 import { DeleteWebsiteButton } from '@/components/websites/delete-website-button'
 import { EventMatrix } from '@/components/websites/event-matrix'
+import { NetworkBeaconsInspector } from '@/components/websites/network-beacons-inspector'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -184,6 +185,12 @@ export default async function WebsiteDetailPage({ params }: PageProps) {
       <EventMatrix
         expectedEvents={site.expectedEvents}
         observedEvents={eventsObserved}
+      />
+
+      {/* Intercepted Meta Network Beacons Inspector */}
+      <NetworkBeaconsInspector
+        events={eventsObserved}
+        networkRequestsObserved={latestCheck?.networkRequestsObserved ?? 0}
       />
 
       {/* Duplicate Events Suspected Warning */}
