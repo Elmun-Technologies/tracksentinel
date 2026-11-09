@@ -1,0 +1,78 @@
+# TrackSentinel — Development Docker Compose
+# Includes PostgreSQL. Web app runs locally via `pnpm dev`.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tracksentinel_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tracksentinel
+      POSTGRES_USER: tracksentinel
+      POSTGRES_PASSWORD: tracksentinel_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - tracksentinel_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tracksentinel -d tracksentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tracksentinel_net
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: tracksentinel_web_dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tracksentinel_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: tracksentinel_worker_dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tracksentinel_net
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/health || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  tracksentinel_postgres_data:
+    name: tracksentinel_postgres_data
+
+networks:
+  tracksentinel_net:
+    name: tracksentinel_net
+    driver: bridge

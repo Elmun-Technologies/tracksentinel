@@ -1,0 +1,78 @@
+# TrackSentinel — Monitoring Worker
+# Playwright-enabled Node.js background worker
+
+FROM node:22-slim AS base
+RUN npm install -g pnpm@10
+
+# Install Playwright dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libxss1 \
+    libgtk-3-0 \
+    libasound2 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrender1 \
+    fonts-liberation \
+    xdg-utils \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Dependencies ----
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml ./
+COPY packages/db/package.json ./packages/db/
+COPY packages/worker/package.json ./packages/worker/
+COPY apps/web/package.json ./apps/web/
+RUN pnpm install --frozen-lockfile
+
+# Install Playwright Chromium browser
+WORKDIR /app/packages/worker
+RUN npx playwright install chromium
+
+# ---- Build ----
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
+COPY --from=deps /app/packages/worker/node_modules ./packages/worker/node_modules
+COPY . .
+
+WORKDIR /app/packages/worker
+RUN pnpm build
+
+# ---- Production image ----
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 worker
+RUN adduser --system --uid 1001 worker
+
+COPY --from=builder /app/packages/worker/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/db ./packages/db
+COPY --from=deps /root/.cache/ms-playwright /root/.cache/ms-playwright
+
+USER worker
+
+EXPOSE 9090
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:9090/health || exit 1
+
+CMD ["node", "dist/index.js"]
